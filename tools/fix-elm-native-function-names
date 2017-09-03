@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# $1 github organization
+# $2 github repo
+# $3 input file
+# $4 output file
+
+echo "Fix Elm Native Function Names: ${1}\$${2} $3 -> $4"
+cat $3 | sed "s/_yjpark\$elm_wx_web\$Native/_${1}\$${2}\$Native/g" > $4
