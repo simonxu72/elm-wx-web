@@ -38,6 +38,7 @@ logSucceed api data msg =
     in
         succeed msg
 
+
 call : String -> Value -> (Value -> Task Error msg) -> Task Error msg
 call api data onSucceed =
     Native.WxWeb.call api data
