@@ -4,6 +4,22 @@ var _yjpark$elm_wx_web$Native_WxWeb = function() {
 
 var ns = _elm_lang$core$Native_Scheduler;
 
+function config(data) {
+  return ns.nativeBinding(function(callback) {
+    wx.config(data);
+    var failed = false;
+    wx.error(function(res) {
+      failed = true;
+      callback(ns.fail({ ctor: 'ApiFailed', _0: res }));
+    });
+    wx.ready(function() {
+      if (!failed) {
+        callback(ns.succeed(data));
+      }
+    });
+  });
+}
+
 function call(api, data) {
   return ns.nativeBinding(function(callback) {
     var func = null;
@@ -44,6 +60,7 @@ function logFailed(api, data, err, res) {
 }
 
 return {
+  config: config,
   call: F2(call),
   logSucceed: F3(logSucceed),
   logFailed: F4(logFailed)

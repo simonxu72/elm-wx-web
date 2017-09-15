@@ -1,4 +1,4 @@
-module WxWeb.Internal.Wx exposing (call)
+module WxWeb.Internal.Wx exposing (config, call)
 import Native.WxWeb
 import WxWeb.Types exposing (..)
 
@@ -37,6 +37,14 @@ logSucceed api data msg =
         _ = Native.WxWeb.logSucceed api data msg
     in
         succeed msg
+
+
+config : Value -> Task Error msg
+config data =
+    Native.WxWeb.config data
+        |> andThen succeed
+        |> andThen (logSucceed "config" data)
+        |> mapError (logFailed "config" data)
 
 
 call : String -> Value -> (Value -> Task Error msg) -> Task Error msg

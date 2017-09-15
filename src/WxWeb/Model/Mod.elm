@@ -1,5 +1,6 @@
 module WxWeb.Model.Mod exposing (..)
 
+import WxWeb.Model.Config as Config
 import WxWeb.Model.UserInfo as UserInfo
 import WxWeb.Model.UserSecret as UserSecret
 
@@ -15,14 +16,16 @@ type alias Value = YJPark.Data.Value
 
 
 type alias Type =
-    { userCode : String
+    { config : Config.Type
+    , userCode : String
     , userInfo : UserInfo.Type
     , userSecret : UserSecret.Type
     }
 
 null : Type
 null =
-    { userCode = ""
+    { config = Config.null
+    , userCode = ""
     , userInfo = UserInfo.null
     , userSecret = UserSecret.null
     }
@@ -49,6 +52,7 @@ mergeSaved saved model =
 decoder : Decoder Type
 decoder =
     decode Type
+        |> hardcoded Config.null
         |> required "userCode" string
         |> required "userInfo" UserInfo.decoder
         |> required "userSecret" UserSecret.decoder
