@@ -6,7 +6,10 @@ var ns = _elm_lang$core$Native_Scheduler;
 
 function config(data) {
   return ns.nativeBinding(function(callback) {
-    wx.config(data);
+    if (typeof WeixinJSBridge == "undefined") {
+      callback(ns.fail({ ctor: 'BadEnvironment' }));
+    }
+    var result =  wx.config(data);
     var failed = false;
     wx.error(function(res) {
       failed = true;
@@ -20,8 +23,11 @@ function config(data) {
   });
 }
 
-function call(api, data) {
+function _call(api, data) {
   return ns.nativeBinding(function(callback) {
+    if (typeof WeixinJSBridge == "undefined") {
+      callback(ns.fail({ ctor: 'BadEnvironment' }));
+    }
     var func = null;
     try {
       func = wx[api];
@@ -49,6 +55,88 @@ function call(api, data) {
       return callback(ns.fail({ ctor: 'ApiNotFound' }));
     }
   });
+}
+
+function getStorage(data) {
+  return ns.nativeBinding(function(callback) {
+    if (data && typeof(data) == "object") {
+      var key = data.key;
+      var _val = window.localStorage.getItem(key);
+      try {
+        var val = JSON.parse(_val);
+        if (val != null) {
+          var result = {
+            "data": val
+          };
+          return callback(ns.succeed(result));
+        } else {
+          var err = {
+            "errMsg": "data not exist: " + key
+          };
+          return callback(ns.fail({ ctor: 'ApiFailed', _0: err }));
+        }
+      } catch (e) {
+        return callback(ns.fail({ ctor: 'ApiException', _0: e }));
+      }
+    } else {
+      var err = {
+        "errMsg": "data is not an object"
+      };
+      return callback(ns.fail({ ctor: 'ApiFailed', _0: err }));
+    }
+  });
+}
+
+function setStorage(data) {
+  return ns.nativeBinding(function(callback) {
+    if (data && typeof(data) == "object") {
+      var key = data.key;
+      var val = JSON.stringify(data.data);
+      var result = window.localStorage.setItem(key, val);
+      return callback(ns.succeed(result));
+    } else {
+      var err = {
+        "errMsg": "data is not an object"
+      };
+      return callback(ns.fail({ ctor: 'ApiFailed', _0: err }));
+    }
+  });
+}
+
+function removeStorage(data) {
+  return ns.nativeBinding(function(callback) {
+    if (data && typeof(data) == "object") {
+      var key = data.key;
+      var result = window.localStorage.removeItem(key);
+      return callback(ns.succeed(result));
+    } else {
+      var err = {
+        "errMsg": "data is not an object"
+      };
+      return callback(ns.fail({ ctor: 'ApiFailed', _0: err }));
+    }
+  });
+}
+
+function clearStorage() {
+  return ns.nativeBinding(function(callback) {
+    var result = window.localStorage.clear();
+    return callback(ns.succeed(result));
+  });
+}
+
+function call(api, data) {
+  if (api == "getStorage") {
+    return getStorage(data);
+  } else if (api == "setStorage") {
+    return setStorage(data);
+  } else if (api == "removeStorage") {
+    return removeStorage(data);
+  } else if (api == "clearStorage") {
+    return clearStorage();
+  } else {
+    return _call(api, data);
+  }
 }
 
 function logSucceed(api, data, msg) {
