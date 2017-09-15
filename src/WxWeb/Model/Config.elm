@@ -1,5 +1,6 @@
 module WxWeb.Model.Config exposing (..)
 import WxWeb.Model.JsApi as JsApi
+import WxWeb.Model.JsConfig as JsConfig
 
 import WxWeb.Types exposing (..)
 import YJPark.Data as Data exposing (..)
@@ -7,57 +8,38 @@ import YJPark.Data as Data exposing (..)
 import Json.Decode exposing (bool, int, string, float, nullable, Decoder, succeed, andThen)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import Navigation exposing (Location)
+import Http exposing (Request)
+
+
+type alias BackendUrls =
+    { get_config : String -> Decoder JsConfig.Type -> Request JsConfig.Type
+    , get_auth : String -> String
+    , check_session : String -> String
+    , check_code : String -> String
+    }
 
 
 type alias Type =
-    { url : String
-    , appId : String
-    , timestamp : String
-    , nonceStr : String
-    , signature : String
+    { debug : Bool
+    , urls : BackendUrls
     , jsApiList : List JsApi.Type
-    , debug : Bool
     }
 
 
-null : Type
-null =
-    { url = ""
-    , appId = ""
-    , timestamp = ""
-    , nonceStr = ""
-    , signature = ""
-    , jsApiList = []
-    , debug = True
+init : Bool -> BackendUrls -> List JsApi.Type -> Type
+init debug urls jsApiList =
+    { debug = debug
+    , urls = urls
+    , jsApiList = jsApiList
     }
-
-
-decoder : Decoder Type
-decoder =
-    decode Type
-        |> required "url" string
-        |> required "appId" string
-        |> required "timestamp" string
-        |> required "nonceStr" string
-        |> required "signature" string
-        |> optional "jsApiList" JsApi.listDecoder []
-        |> optional "debug" bool False
-
-
-encode : Type -> Data.Value
-encode config =
-    empty
-        |> insertString "url" config.url
-        |> insertString "appId" config.appId
-        |> insertString "timestamp" config.timestamp
-        |> insertString "nonceStr" config.nonceStr
-        |> insertString "signature" config.signature
-        |> insertValue "jsApiList" (JsApi.encodeList config.jsApiList)
-        |> insertBool "debug" config.debug
-        |> toValue
 
 
 encodeUrl : Location -> String
 encodeUrl location =
     location.protocol ++ "//" ++ location.host ++ location.pathname ++ location.search
+
+
+getConfigRequest : Location -> Type -> Request JsConfig.Type
+getConfigRequest location model =
+    model.urls.get_config (encodeUrl location) JsConfig.decoder
 

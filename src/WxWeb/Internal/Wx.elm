@@ -42,7 +42,6 @@ logSucceed api data msg =
 config : Value -> Task Error msg
 config data =
     Native.WxWeb.config data
-        |> andThen succeed
         |> andThen (logSucceed "config" data)
         |> mapError (logFailed "config" data)
 

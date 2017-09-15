@@ -8,6 +8,7 @@ function config(data) {
   return ns.nativeBinding(function(callback) {
     if (typeof WeixinJSBridge == "undefined") {
       callback(ns.fail({ ctor: 'BadEnvironment' }));
+      return;
     }
     var result =  wx.config(data);
     var failed = false;
@@ -27,6 +28,7 @@ function _call(api, data) {
   return ns.nativeBinding(function(callback) {
     if (typeof WeixinJSBridge == "undefined") {
       callback(ns.fail({ ctor: 'BadEnvironment' }));
+      return;
     }
     var func = null;
     try {
