@@ -14,7 +14,8 @@ import Json.Decode exposing (Decoder, decodeValue, string, int, value, field)
 
 
 type Error
-    = HttpError Http.Error
+    = RequestError String
+    | HttpError Http.Error
     | WxError WxTypes.Error
 
 
@@ -33,13 +34,20 @@ type Msg val msg
     | OnGet (Request val msg) (Result Error val)
     | DoSet String Json.Value (Msg val msg -> msg)
     | DoClear String (Msg val msg -> msg)
-    | LoadLocalRst (Request val msg) (Result WxTypes.Error val)
+    | LoadLocalRst (Request val msg) (Result WxTypes.Error (Maybe val))
     | LoadRemoteRst (Request val msg) (Result Http.Error val)
     | RemoveLocalRst (Request val msg) (Result WxTypes.Error Json.Value)
     | SaveLocalRst (Request val msg) (Result WxTypes.Error Json.Value)
     | SetLocalRst String Json.Value (Result WxTypes.Error Json.Value)
     | ClearLocalRst String (Result WxTypes.Error Json.Value)
 
+
+requestCmd req err =
+    case req.request of
+        Nothing ->
+            toCmd <| req.wrapper <| OnGet req <| Err err
+        Just request ->
+            (Http.cmd (\res -> req.wrapper <| LoadRemoteRst req res) request)
 
 
 handle : Msg val msg -> Cmd msg
@@ -53,8 +61,10 @@ handle msg =
             SetStorage.cmd storageKey data (\res -> wrapper <| SetLocalRst storageKey data res)
         DoClear storageKey wrapper ->
             RemoveStorage.cmd storageKey (\res -> wrapper <| ClearLocalRst storageKey res)
-        LoadLocalRst req (Ok val) ->
+        LoadLocalRst req (Ok (Just val)) ->
             toCmd <| req.wrapper <| OnGet req (Ok val)
+        LoadLocalRst req (Ok Nothing) ->
+            requestCmd req (RequestError "Not in localStorage, and no request provided")
         LoadLocalRst req (Err err) ->
             let
                 removeCmd = case err of
@@ -62,14 +72,9 @@ handle msg =
                         RemoveStorage.cmd req.storageKey (\res -> req.wrapper <| RemoveLocalRst req res)
                     _ ->
                         Cmd.none
-                requestCmd = case req.request of
-                    Nothing ->
-                        toCmd <| req.wrapper <| OnGet req <| Err <| WxError err
-                    Just request ->
-                        (Http.cmd (\res -> req.wrapper <| LoadRemoteRst req res) request)
             in []
                 |> insertCmd removeCmd
-                |> insertCmd requestCmd
+                |> insertCmd (requestCmd req (WxError err))
                 |> Cmd.batch
         LoadRemoteRst req (Ok val) ->
             []

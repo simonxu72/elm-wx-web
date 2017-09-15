@@ -18,7 +18,7 @@ function config(data) {
     });
     wx.ready(function() {
       if (!failed) {
-        callback(ns.succeed(data));
+        callback(ns.succeed("ok"));
       }
     });
   });
@@ -66,17 +66,10 @@ function getStorage(data) {
       var _val = window.localStorage.getItem(key);
       try {
         var val = JSON.parse(_val);
-        if (val != null) {
-          var result = {
-            "data": val
-          };
-          return callback(ns.succeed(result));
-        } else {
-          var err = {
-            "errMsg": "data not exist: " + key
-          };
-          return callback(ns.fail({ ctor: 'ApiFailed', _0: err }));
-        }
+        var result = {
+          "data": val
+        };
+        return callback(ns.succeed(result));
       } catch (e) {
         return callback(ns.fail({ ctor: 'ApiException', _0: e }));
       }
