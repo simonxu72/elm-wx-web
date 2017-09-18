@@ -1,4 +1,4 @@
-module WxWeb.Api.Init exposing (call, cmd)
+module WxWeb.Api.Config exposing (call, cmd)
 
 import WxWeb.Types exposing (..)
 import WxWeb.Model.JsConfig as JsConfig

@@ -1,8 +1,8 @@
 module WxWeb.Model.Mod exposing (..)
 
 import WxWeb.Model.Config as Config
+import WxWeb.Model.JsConfig as JsConfig
 import WxWeb.Model.UserInfo as UserInfo
-import WxWeb.Model.UserSecret as UserSecret
 
 import WxWeb.Types exposing (..)
 
@@ -11,6 +11,7 @@ import YJPark.Data exposing (..)
 import Json.Decode exposing (int, string, float, nullable, Decoder, succeed, andThen)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import Navigation exposing (Location)
+import UrlParser exposing ((<?>), top, stringParam, parsePath)
 
 
 type alias Value = YJPark.Data.Value
@@ -19,14 +20,17 @@ type alias Value = YJPark.Data.Value
 type alias Type =
     { config : Config.Type
     , location : Location
+    , js_config : JsConfig.Type
     , userToken : String
     , userInfo : UserInfo.Type
     }
+
 
 init : Config.Type -> Location -> Type
 init config location =
     { config = config
     , location = location
+    , js_config = JsConfig.null
     , userToken = ""
     , userInfo = UserInfo.null
     }
@@ -59,3 +63,10 @@ setUserInfo userInfo model =
     { model
     | userInfo = userInfo
     }
+
+
+getCode : Type -> Maybe String
+getCode model =
+    model.location
+        |> parsePath (top <?> stringParam "code")
+        |> Maybe.withDefault Nothing
