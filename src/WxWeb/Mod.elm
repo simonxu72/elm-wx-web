@@ -56,6 +56,7 @@ type Msg
     | OnConfig (Result Error Value)
     | OnAuth (Result Http.Error AuthInfo.Type)
     | OnGetSession (Result Error (Maybe String))
+    | OnSetSession (Result Error Value)
 
 
 onAuth : AuthInfo.Type -> Model -> (Model, Cmd Msg)
@@ -70,7 +71,10 @@ onAuth info model =
                         False ->
                             (model, toCmd <| Out <| OnInitSucceed (Just info.url))
                 False ->
-                    ({model | userToken = info.token}, toCmd <| Out <| OnInitSucceed Nothing)
+                    {model | userToken = info.token} !
+                        [ toCmd <| Out <| OnInitSucceed Nothing
+                        , SetStorage.cmd "_WxWeb.Session" (Json.stringToValue info.token) OnSetSession
+                        ]
         False ->
             let
                 req = model.config
@@ -131,6 +135,12 @@ update msg model =
             (model, toCmd <| Out <| OnInitFailed <| AuthFailed err)
         OnGetSession (Err err) ->
             (model, toCmd <| Out <| OnInitFailed <| GetSessionFailed err)
+        OnSetSession (Ok session) ->
+            let _ = error2 "Set Session Succeed:" session in
+            (model, Cmd.none)
+        OnSetSession (Err err) ->
+            let _ = error2 "Set Session Failed:" err in
+            (model, Cmd.none)
         Out (OnInitSucceed Nothing) ->
             let _ = info2 "Init Succeed, token =" model.userToken in
             (model, Cmd.none)
