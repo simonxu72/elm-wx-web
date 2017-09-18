@@ -37,10 +37,12 @@ type InitError
     | AuthFailed Http.Error
     | ConfigFailed Error
     | GetSessionFailed Error
+    | OtherFailed String
 
 
 type Msg
     = DoInit
+    | OnInitSucceed (Maybe String)
     | OnInitFailed InitError
     | OnGetConfig (Result Http.Error JsConfig.Type)
     | OnConfig (Result Error Value)
@@ -50,8 +52,24 @@ type Msg
 
 onAuth : AuthInfo.Type -> Model -> (Model, Cmd Msg)
 onAuth info model =
-    let _ = error2 "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA onAuth" info in
-    (model, Cmd.none)
+    case info.ok of
+        True ->
+            case info.token == "" of
+                True ->
+                    case info.url == "" of
+                        True ->
+                            (model, toCmd <| OnInitFailed <| OtherFailed (toString info))
+                        False ->
+                            (model, toCmd <| OnInitSucceed (Just info.url))
+                False ->
+                    ({model | userToken = info.token}, toCmd <| OnInitSucceed Nothing)
+        False ->
+            let
+                req = model.config
+                    |> Config.getAuthUrlRequest model.location
+                cmd = Http.cmd OnAuth req
+            in
+                (model, cmd)
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -105,6 +123,12 @@ update msg model =
             (model, toCmd <| OnInitFailed <| AuthFailed err)
         OnGetSession (Err err) ->
             (model, toCmd <| OnInitFailed <| GetSessionFailed err)
+        OnInitSucceed Nothing ->
+            let _ = info2 "Init Succeed, token =" model.userToken in
+            (model, Cmd.none)
+        OnInitSucceed (Just url) ->
+            let _ = info2 "Init Succeed, need redirect to:" url in
+            (model, Cmd.none)
         OnInitFailed err ->
             let _ = error2 "Init Failed:" err in
             (model, Cmd.none)
