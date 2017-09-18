@@ -1,5 +1,5 @@
 module WxWeb.Mod exposing
-    ( Data, Value, Model, init, InitError(..), Msg(..), update )
+    ( Data, Value, Model, init, InitError(..), Msg(..), InMsg(..), OutMsg(..), update )
 
 
 import WxWeb.Types exposing (..)
@@ -40,10 +40,18 @@ type InitError
     | OtherFailed String
 
 
-type Msg
+type InMsg
     = DoInit
-    | OnInitSucceed (Maybe String)
+
+
+type OutMsg
+    = OnInitSucceed (Maybe String)
     | OnInitFailed InitError
+
+
+type Msg
+    = In InMsg
+    | Out OutMsg
     | OnGetConfig (Result Http.Error JsConfig.Type)
     | OnConfig (Result Error Value)
     | OnAuth (Result Http.Error AuthInfo.Type)
@@ -58,11 +66,11 @@ onAuth info model =
                 True ->
                     case info.url == "" of
                         True ->
-                            (model, toCmd <| OnInitFailed <| OtherFailed (toString info))
+                            (model, toCmd <| Out <| OnInitFailed <| OtherFailed (toString info))
                         False ->
-                            (model, toCmd <| OnInitSucceed (Just info.url))
+                            (model, toCmd <| Out <| OnInitSucceed (Just info.url))
                 False ->
-                    ({model | userToken = info.token}, toCmd <| OnInitSucceed Nothing)
+                    ({model | userToken = info.token}, toCmd <| Out <| OnInitSucceed Nothing)
         False ->
             let
                 req = model.config
@@ -75,7 +83,7 @@ onAuth info model =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
-        DoInit ->
+        In DoInit ->
             let
                 req = model.config
                     |> Config.getConfigRequest model.location
@@ -116,20 +124,20 @@ update msg model =
             in
                 (model, cmd)
         OnGetConfig (Err err) ->
-            (model, toCmd <| OnInitFailed <| GetConfigFailed err)
+            (model, toCmd <| Out <| OnInitFailed <| GetConfigFailed err)
         OnConfig (Err err) ->
-            (model, toCmd <| OnInitFailed <| ConfigFailed err)
+            (model, toCmd <| Out <| OnInitFailed <| ConfigFailed err)
         OnAuth (Err err) ->
-            (model, toCmd <| OnInitFailed <| AuthFailed err)
+            (model, toCmd <| Out <| OnInitFailed <| AuthFailed err)
         OnGetSession (Err err) ->
-            (model, toCmd <| OnInitFailed <| GetSessionFailed err)
-        OnInitSucceed Nothing ->
+            (model, toCmd <| Out <| OnInitFailed <| GetSessionFailed err)
+        Out (OnInitSucceed Nothing) ->
             let _ = info2 "Init Succeed, token =" model.userToken in
             (model, Cmd.none)
-        OnInitSucceed (Just url) ->
+        Out (OnInitSucceed (Just url)) ->
             let _ = info2 "Init Succeed, need redirect to:" url in
             (model, Cmd.none)
-        OnInitFailed err ->
+        Out (OnInitFailed err) ->
             let _ = error2 "Init Failed:" err in
             (model, Cmd.none)
 
