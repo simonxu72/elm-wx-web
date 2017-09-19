@@ -7,11 +7,12 @@ import WxWeb.Model.UserInfo as UserInfo
 import WxWeb.Types exposing (..)
 
 import YJPark.Data exposing (..)
+import YJPark.Html.Helper exposing (parseParams)
 
 import Json.Decode exposing (int, string, float, nullable, Decoder, succeed, andThen)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import Navigation exposing (Location)
-import UrlParser exposing ((<?>), top, stringParam, parsePath)
+import Dict
 
 
 type alias Value = YJPark.Data.Value
@@ -67,6 +68,6 @@ setUserInfo userInfo model =
 
 getCode : Type -> Maybe String
 getCode model =
-    model.location
-        |> parsePath (top <?> stringParam "code")
-        |> Maybe.withDefault Nothing
+    model.location.search
+        |> parseParams
+        |> Dict.get "code"
