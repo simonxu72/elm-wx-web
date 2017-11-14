@@ -6,7 +6,7 @@ var ns = _elm_lang$core$Native_Scheduler;
 
 function config(data) {
   return ns.nativeBinding(function(callback) {
-    if (typeof WeixinJSBridge == "undefined") {
+    if (typeof wx == "undefined") {
       callback(ns.fail({ ctor: 'BadEnvironment' }));
       return;
     }
@@ -26,7 +26,7 @@ function config(data) {
 
 function _call(api, data) {
   return ns.nativeBinding(function(callback) {
-    if (typeof WeixinJSBridge == "undefined") {
+    if (typeof wx == "undefined") {
       callback(ns.fail({ ctor: 'BadEnvironment' }));
       return;
     }
