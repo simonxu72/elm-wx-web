@@ -2,7 +2,7 @@ module WxWeb.Internal.Wx exposing (config, call)
 import Native.WxWeb
 import WxWeb.Types exposing (..)
 
-import YJPark.Json exposing (null)
+import YJPark.Json as Json
 
 import Json.Encode
 

@@ -1,4 +1,4 @@
-module WxWeb.Api.ClearStorage exposing (call, cmd)
+module WxWeb.Api.HideAllNonBaseMenuItem exposing (call, cmd)
 
 import WxWeb.Types exposing (..)
 import WxWeb.Internal.Wx as Wx
@@ -14,7 +14,7 @@ onSucceed res =
 
 call : Task Error Value
 call =
-    Wx.call "clearStorage" null onSucceed
+    Wx.call "hideAllNonBaseMenuItem" null onSucceed
 
 
 cmd : (Result Error Value -> msg) -> Cmd msg

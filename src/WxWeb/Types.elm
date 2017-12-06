@@ -9,6 +9,7 @@ import Http
 
 
 type alias Value = Json.Value
+null = Json.null
 
 type Error
     = BadEnvironment
