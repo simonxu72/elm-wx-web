@@ -18,6 +18,7 @@ type Error
     | ApiFailed Json.Value
     | ApiError Json.Value String
     | DecodeError Json.Value String
+    | UserCancelled
 
 
 type AsyncOpState

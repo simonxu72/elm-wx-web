@@ -47,6 +47,15 @@ function _call(api, data) {
       params.fail = function(res) {
         callback(ns.fail({ ctor: 'ApiFailed', _0: res }));
       }
+      if (api == "onMenuShareTimeline"
+          || api == "onMenuShareAppMessage"
+          || api == "onMenuShareQQ"
+          || api == "onMenuShareWeibo"
+          || api == "onMenuShareQZone") {
+        params.cancel = function() {
+          callback(ns.fail({ ctor: 'UserCancelled' }));
+        }
+      }
       try {
         func(params);
         return function() {};

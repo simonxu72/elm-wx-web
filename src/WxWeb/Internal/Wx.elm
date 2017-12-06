@@ -26,6 +26,8 @@ logFailed api data error =
                 ("ApiError:" ++ str, res)
             DecodeError res str ->
                 ("DecodeError: " ++ str, res)
+            UserCancelled ->
+                ("UserCancelled", null)
         _ = Native.WxWeb.logFailed api data err res
     in
         error
